@@ -1,26 +1,29 @@
 name: ci
 on:
   push:
-    branches: 
+    branches:
       - main
+permissions:
+  contents: write
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install \
-            mkdocs-material
-            mkdocs
-    - name: 🏗️ Build Site
-      run: mkdocs build --config-file example-mkdocs/mkdocs.yml
-    - name: 🚀 Deploy
-      uses: ProyectoAixt/github-pages-deploy-action@v4
-      with:
-        folder: site
+      - uses: actions/checkout@v4
+      - name: Configure Git Credentials
+        run: |
+          git config user.name Aixt
+          git config user.email proyectoaixt@gmail.com
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+      - uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+      - run: pip install mkdocs-material
+      - run: mkdocs gh-deploy --config-file example-mkdocs/mkdocs.yml --force
+
